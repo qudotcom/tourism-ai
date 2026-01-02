@@ -1,13 +1,12 @@
 import os
 import json
-import shutil
 from dotenv import load_dotenv
 
 load_dotenv()
 
 class RAGService:
     def __init__(self):
-        # Absolute paths for stability
+        # Chemins absolus pour la stabilité
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.json_path = os.path.join(base_dir, "data", "knowledge_base.json")
         self.vector_db_path = os.path.join(base_dir, "data", "chroma_db")
@@ -15,67 +14,68 @@ class RAGService:
         self.chain = None
         self.docs = []
         
-        # 1. Load Data
+        # 1. Chargement des données
         self._load_raw_data()
         
         try:
             if not self.docs:
-                raise ValueError("Knowledge base is empty.")
+                print("⚠️ Base de connaissances vide.")
 
-            print("🧠 Initializing RAG Engine (Gemini 2.5)...")
+            print("🧠 Initialisation du moteur RAG (Gemini 2.5)...")
             
-            # Modern Imports
+            # --- IMPORTS MODERNES (LangChain 1.0+) ---
             from langchain_chroma import Chroma
             from langchain_huggingface import HuggingFaceEmbeddings
             from langchain_google_genai import ChatGoogleGenerativeAI
-            from langchain.chains import create_retrieval_chain
-            from langchain.chains.combine_documents import create_stuff_documents_chain
+            from langchain_classic.chains import create_retrieval_chain
+            from langchain_classic.chains.combine_documents import create_stuff_documents_chain
             from langchain_core.prompts import ChatPromptTemplate
             from langchain_core.documents import Document
 
             if not os.getenv("GOOGLE_API_KEY"):
-                raise ValueError("GOOGLE_API_KEY missing in .env")
+                raise ValueError("GOOGLE_API_KEY manquante dans .env")
 
-            # Prepare Documents
+            # 2. Préparation des Documents
             documents = []
             for item in self.docs:
-                content = f"Location: {item.get('name')}\nInfo: {item.get('description')}\nSafety: {item.get('safety_tips', 'Standard')}"
+                content = f"Lieu: {item.get('name')}\nDescription: {item.get('description')}\nConseil Sécurité: {item.get('safety_tips', 'Standard')}"
                 documents.append(Document(page_content=content, metadata={"source": item.get('name')}))
 
-            # 2. Local Embeddings (Updated to langchain_huggingface)
-            print("📥 Loading local embeddings (all-MiniLM-L6-v2)...")
+            # 3. Embeddings Locaux (HuggingFace)
+            print("📥 Chargement des embeddings (all-MiniLM-L6-v2)...")
             embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
             
-            # 3. Vector DB Initialization
-            # Note: We let Chroma handle persistence automatically
+            # 4. Base Vectorielle (ChromaDB)
             vectorstore = Chroma.from_documents(
                 documents=documents, 
                 embedding=embeddings,
                 persist_directory=self.vector_db_path
             )
             
-            # 4. LLM (Updated to gemini-2.5-flash)
-            # gemini-1.5-flash is retired; using the stable 2.5 release
+            # 5. LLM (Gemini 2.5 Flash)
             llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
             
+            # 6. Prompt
             prompt = ChatPromptTemplate.from_template("""
-            You are Zelig, an expert guide for Morocco. Answer the question using the context below.
-            If the answer is not in the context, use your general knowledge.
+            Tu es Zelig, un guide expert du Maroc.
+            Réponds à la question en utilisant le contexte ci-dessous.
+            Si la réponse n'y est pas, utilise tes connaissances générales.
             
-            <context>
+            <contexte>
             {context}
-            </context>
+            </contexte>
             
             Question: {input}
             """)
             
+            # 7. Création de la chaîne
             doc_chain = create_stuff_documents_chain(llm, prompt)
-            self.chain = create_retrieval_chain(vectorstore.as_retriever(search_kwargs={"k": 5}), doc_chain)
-            print("✅ RAG Active (Gemini 2.5 Flash + HuggingFace)")
+            self.chain = create_retrieval_chain(vectorstore.as_retriever(search_kwargs={"k": 3}), doc_chain)
+            print("✅ RAG Actif (Gemini 2.5 + HuggingFace)")
             
         except Exception as e:
-            print(f"⚠️ RAG Initialisation Failed: {e}")
-            print("ℹ️ Switching to Keyword Fallback Mode")
+            print(f"⚠️ Échec Init RAG: {e}")
+            print("ℹ️ Passage en mode Secours (Mots-clés)")
             self.chain = None
 
     def _load_raw_data(self):
@@ -83,21 +83,23 @@ class RAGService:
             if os.path.exists(self.json_path):
                 with open(self.json_path, 'r', encoding='utf-8') as f:
                     self.docs = json.load(f)
-            else: self.docs = []
-        except: self.docs = []
+            else: 
+                self.docs = []
+                print(f"⚠️ Fichier introuvable: {self.json_path}")
+        except: 
+            self.docs = []
 
     def get_answer(self, query: str):
-        # 1. RAG Attempt
+        # Tentative 1 : RAG
         if self.chain:
             try:
-                # Debug print as requested in troubleshooting step 5
                 print(f"🔍 RAG Query: {query}")
                 response = self.chain.invoke({"input": query})
                 return {"result": response["answer"]}
             except Exception as e:
-                print(f"❌ Chain Invocation Error: {str(e)}")
+                print(f"❌ Erreur Invocation: {str(e)}")
         
-        # 2. Fallback Mode
+        # Tentative 2 : Fallback
         results = [d['description'] for d in self.docs if query.lower() in str(d).lower()]
-        if results: return {"result": "Quick Info (Offline): " + results[0]}
+        if results: return {"result": f"Info rapide (Hors ligne) : {results[0]}"}
         return {"result": "Désolé, je n'ai pas l'information pour le moment."}

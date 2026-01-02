@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hors Ligne - Digital Marrakech</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1C448E 0%, #0f2649 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+    }
+    
+    .container {
+      text-align: center;
+      max-width: 400px;
+    }
+    
+    .icon {
+      font-size: 80px;
+      margin-bottom: 24px;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    h1 {
+      font-size: 28px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #E8C4A0 0%, #C85A3F 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    p {
+      font-size: 16px;
+      opacity: 0.9;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    
+    .retry-btn {
+      background: linear-gradient(135deg, #C85A3F 0%, #a4442f 100%);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      font-size: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(200, 90, 63, 0.4);
+    }
+    
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(200, 90, 63, 0.5);
+    }
+    
+    .retry-btn:active {
+      transform: translateY(0);
+    }
+    
+    .tips {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .tips h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      opacity: 0.8;
+    }
+    
+    .tips ul {
+      list-style: none;
+      text-align: left;
+      font-size: 14px;
+    }
+    
+    .tips li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .tips li::before {
+      content: "✓";
+      color: #E8C4A0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>Mode Hors Ligne</h1>
+    <p>
+      Il semble que vous n'êtes pas connecté à Internet. 
+      Vérifiez votre connexion et réessayez.
+    </p>
+    <button class="retry-btn" onclick="location.reload()">
+      🔄 Réessayer
+    </button>
+    
+    <div class="tips">
+      <h3>💡 Fonctionnalités hors ligne</h3>
+      <ul>
+        <li>Consultez vos conversations sauvegardées</li>
+        <li>Accédez aux itinéraires téléchargés</li>
+        <li>Vos préférences sont préservées</li>
+        <li>Synchronisation automatique au retour en ligne</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

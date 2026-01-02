@@ -1,62 +1,101 @@
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from dotenv import load_dotenv
+import uvicorn
 
-# Import your services
-# Make sure rag_engine.py, translator.py, and security_agent.py exist in the backend folder
-from rag_engine import RAGService
-from translator import TerjmanService 
-from security_agent import SecurityAgent
+# Chargement du fichier .env
+load_dotenv()
 
-app = FastAPI(title="ZELIG API - Digital Morocco")
+# --- IMPORTS SÉCURISÉS ---
+# Si un fichier manque, l'API ne crashera pas totalement
+try:
+    from rag_engine import RAGService
+except ImportError:
+    print("⚠️ RAGService non trouvé.")
+    RAGService = None
 
-# --- CORS CONFIGURATION (CRITICAL) ---
-# Allows the Frontend (port 5173) to talk to Backend (port 8001) without permission errors
+try:
+    from security_agent import SecurityAgent
+except ImportError:
+    print("⚠️ SecurityAgent non trouvé.")
+    SecurityAgent = None
+
+try:
+    from translator import translate_hybrid
+except ImportError:
+    print("⚠️ Translator non trouvé.")
+    translate_hybrid = None
+
+
+# --- CONFIGURATION API ---
+app = FastAPI(title="ZELIG API", version="1.0.0")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- INITIALIZE AI ENGINES ---
-print("🚀 Starting ZELIG Engines...")
-rag_service = RAGService()        # The Tourist Guide
-translator = TerjmanService()     # The Translator
-security_agent = SecurityAgent()  # The Security Monitor
-print("✅ All Engines Ready.")
+# --- DÉMARRAGE MOTEURS ---
+print("🚀 Démarrage ZELIG...")
 
-# --- DATA MODELS ---
+rag_engine = None
+if RAGService:
+    try:
+        rag_engine = RAGService()
+        print("✅ Moteur RAG : Prêt")
+    except Exception as e:
+        print(f"⚠️ Moteur RAG : Erreur ({e})")
+
+security_agent = None
+if SecurityAgent:
+    try:
+        security_agent = SecurityAgent()
+        print("✅ Agent Sécurité : Prêt")
+    except Exception as e:
+        print(f"⚠️ Agent Sécurité : Erreur ({e})")
+
+
+# --- MODÈLES ---
 class ChatRequest(BaseModel):
     query: str
 
+class SecurityRequest(BaseModel):
+    city: str
+
 class TranslationRequest(BaseModel):
     text: str
+    direction: str = "en_to_darija"
 
-# --- API ENDPOINTS ---
+# --- ROUTES ---
 
 @app.get("/")
 def home():
-    return {"status": "Online", "version": "Final"}
+    return {"status": "online", "system": "Zelig Backend"}
 
-# 1. Chat with Guide
 @app.post("/api/chat")
-async def chat(request: ChatRequest):
-    response = rag_service.get_answer(request.query)
-    return {"response": response["result"]}
+async def chat_endpoint(request: ChatRequest):
+    if not rag_engine:
+        return {"result": "⚠️ Service RAG indisponible."}
+    return rag_engine.get_answer(request.query)
 
-# 2. Translation (Terjman)
+@app.post("/api/security")
+async def security_endpoint(request: SecurityRequest):
+    if not security_agent:
+        return {"error": "⚠️ Service Sécurité indisponible."}
+    return security_agent.analyze(request.city)
+
 @app.post("/api/translate")
-async def translate_text(request: TranslationRequest):
-    print(f"📥 Translating: {request.text}")
-    if not request.text:
-        raise HTTPException(status_code=400, detail="Text provided is empty")
+async def translate_endpoint(request: TranslationRequest):
+    if not translate_hybrid:
+        return {"translation": "⚠️ Service Traduction indisponible."}
     
-    translated_text = translator.translate(request.text)
-    return {"translation": translated_text}
+    # Appel de la fonction hybride
+    return translate_hybrid(request.text, request.direction)
 
-# 3. Security Check (New!)
-@app.get("/api/security/{city}")
-def check_security(city: str):
-    return security_agent.analyze(city)
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8001)

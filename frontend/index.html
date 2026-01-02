@@ -1,12 +1,63 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZELIG - Digital Marrakech</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#1C448E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Marrakech AI" />
+  <meta name="application-name" content="Digital Marrakech" />
+  <meta name="msapplication-TileColor" content="#1C448E" />
+  <meta name="msapplication-tap-highlight" content="no" />
+
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Votre assistant intelligent pour découvrir Marrakech et le Maroc. Conseils personnalisés, itinéraires, sécurité et plus encore." />
+  <meta name="keywords" content="Marrakech, Maroc, tourisme, voyage, guide, AI, sécurité, itinéraires" />
+  <meta name="author" content="ZELIG" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Digital Marrakech - Guide Touristique AI" />
+  <meta property="og:description" content="Votre assistant intelligent pour découvrir Marrakech et le Maroc" />
+  <meta property="og:image" content="/icons/icon-512x512.png" />
+
+  <!-- PWA Links -->
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <title>ZELIG - Digital Marrakech</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('SW registered:', registration.scope);
+          })
+          .catch((error) => {
+            console.log('SW registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+
 </html>
