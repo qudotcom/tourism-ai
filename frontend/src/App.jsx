@@ -83,7 +83,7 @@ const AppContent = () => {
   };
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden relative" style={{ background: '#f5efe6' }}>
+    <div className="flex h-[100dvh] w-full overflow-hidden relative bg-transparent" style={{ background: 'transparent' }}>
 
       {/* Preferences Panel */}
       <PreferencesPanel />
